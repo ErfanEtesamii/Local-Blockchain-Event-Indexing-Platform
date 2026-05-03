@@ -81,7 +81,8 @@ Checking the status of deployments in Kubernetes:
 ```bash
 kubectl get pods
 ```
-We should see both `indexer-deployment` and `api-deployment` in `Running` status. We also monitoring my cluster with **Lens** 
+We should see both `indexer-deployment` and `api-deployment` in `Running` status
+I also monitoring my cluster with **Lens** 
 
 ***
 
