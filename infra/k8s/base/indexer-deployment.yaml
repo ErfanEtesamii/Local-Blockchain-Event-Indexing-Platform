@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: indexer-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: indexer
+  template:
+    metadata:
+      labels:
+        app: indexer
+    spec:
+      containers:
+      - name: indexer
+        image: my-indexer:latest  # این همان ایمیجی است که با داکر بیلد کردی
+        imagePullPolicy: Never    # چون در سیستم خودت است، نیازی به دانلود نیست
