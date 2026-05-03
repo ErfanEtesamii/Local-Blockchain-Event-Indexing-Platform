@@ -40,3 +40,48 @@ kind --version
 ```
 
 ---
+
+### Getting Started
+
+To set up the local infrastructure and deploy the services :
+
+#### 1. Start the Local Kubernetes Cluster
+Initialize the cluster using `kind`:
+```bash
+kind create cluster --name local-blockchain
+```
+Verify the cluster status:
+```bash
+kubectl get nodes
+```
+
+#### 2. Containerize Services
+Building the Docker images for the indexer and API services:
+```bash
+# Build Indexer
+docker build -t my-indexer ./apps/indexer
+
+# Build API
+docker build -t my-api ./apps/api
+```
+
+#### 3. Deploy to Kubernetes
+Loading the images into the kind cluster and apply the Kubernetes manifests:
+```bash
+# Load images into kind
+kind load docker-image my-indexer --name local-blockchain
+kind load docker-image my-api --name local-blockchain
+
+# Deploy services
+kubectl apply -f infra/k8s/base/
+```
+
+#### 4. Verification
+Checking the status of deployments in Kubernetes:
+```bash
+kubectl get pods
+```
+We should see both `indexer-deployment` and `api-deployment` in `Running` status. We also monitoring my cluster with **Lens** 
+
+***
+
