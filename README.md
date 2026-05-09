@@ -86,3 +86,16 @@ I also monitoring my cluster with **Lens**
 
 ***
 
+
+## Current Progress
+
+Today I added PostgreSQL to the Kubernetes cluster by creating a PersistentVolumeClaim, a Deployment, and a Service for the database. During verification, the PostgreSQL pod initially stayed in `Pending` because Kubernetes could not pull the image from Docker Hub due to network instability and an `ImagePullBackOff` error.
+
+To avoid repeated external downloads, I switched to a local-first workflow. I built the API and indexer images locally and successfully loaded them into the `kind` cluster. This confirmed that the local Docker setup and the `kind` cluster are working correctly, and it reduced the need for internet access during deployment.
+
+At this point, the infrastructure includes:
+- A running local Kubernetes cluster.
+- Locally built API and indexer images loaded into `kind`.
+- A PostgreSQL configuration added to the cluster manifests.
+
+The next step is to finalize the Kubernetes manifests for the application services so they run entirely from local images without pulling from the network.
