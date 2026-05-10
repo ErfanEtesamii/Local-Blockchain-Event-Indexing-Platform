@@ -1,39 +1,84 @@
 # Local-Blockchain-Event-Indexing-Platform
 
-## Prerequisites
+## Project Overview
 
-To get started with this project, I made sure the following tools are installed on my local machine:
+In this project, I am building a local blockchain event indexing platform designed to collect, store, and expose blockchain transfer events through a backend API service.
 
-1. **Docker**: I use Docker to build and run application containers.
+I built the infrastructure around:
 
-   * I installed Docker Desktop from: [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/) (Windows/Mac)
-   * For Linux, followed the official guide: [https://docs.docker.com/engine/install/](https://docs.docker.com/engine/install/)
+* Kubernetes (`kind`)
+* Docker
+* PostgreSQL
+* Local containerized services
 
-2. **kubectl**: I use this CLI tool to interact with my Kubernetes cluster.
-
-   * **Windows (PowerShell):** `winget install Kubernetes.kubectl`
-   * **macOS (Homebrew):** `brew install kubectl`
-   * **Linux:** `sudo apt install kubectl`
-
-3. **kind (Kubernetes in Docker)**: I use kind to run a local Kubernetes cluster inside Docker.
-
-   * **macOS (Homebrew):** `brew install kind`
-   * **Windows:** I downloaded the binary from: [https://kind.sigs.k8s.io/docs/user/quick-start/](https://kind.sigs.k8s.io/docs/user/quick-start/)
-   * **Linux:**
-
-     ```bash
-     curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.20.0/kind-linux-amd64
-     chmod +x ./kind
-     sudo mv ./kind /usr/local/bin/kind
-     ```
+My goal is to create a fully local-first development environment for indexing blockchain events and exposing them through scalable backend services.
 
 ---
 
-## Verification
+# Prerequisites
 
-After installing everything, I verified my setup with:
+To get started with this project, I installed the following tools on my local machine.
 
-```bash
+## 1. Docker
+
+I use Docker to build and run the application containers.
+
+### Installation
+
+I installed Docker Desktop from:
+
+```text
+https://www.docker.com/products/docker-desktop/
+```
+
+---
+
+## 2. kubectl
+
+I use `kubectl` to interact with my Kubernetes cluster.
+
+### Installation
+
+#### Windows (PowerShell)
+
+```bash id="jlwm8w"
+winget install Kubernetes.kubectl
+```
+
+---
+
+## 3. kind (Kubernetes in Docker)
+
+I use `kind` to run a local Kubernetes cluster inside Docker.
+
+### Installation
+
+#### Windows
+
+I downloaded the binary from:
+
+```text id="lgp8u7"
+https://kind.sigs.k8s.io/docs/user/quick-start/
+```
+
+---
+
+## 4. PostgreSQL
+
+I use PostgreSQL as the primary relational database for storing indexed blockchain events.
+
+### Database Tools
+
+* I use PostgreSQL as the main database system.
+* I use pgAdmin for graphical database management, query execution, and schema inspection.
+
+---
+
+# Environment Verification
+
+After installing the required tools, I verified my setup with:
+
+```bash id="r5clbh"
 docker --version
 kubectl version --client
 kind --version
@@ -41,61 +86,225 @@ kind --version
 
 ---
 
-### Getting Started
+# Getting Started
 
-To set up the local infrastructure and deploy the services :
+## 1. Create the Local Kubernetes Cluster
 
-#### 1. Start the Local Kubernetes Cluster
-Initialize the cluster using `kind`:
-```bash
+I initialize the cluster using `kind`:
+
+```bash id="4zkmli"
 kind create cluster --name local-blockchain
 ```
-Verify the cluster status:
-```bash
+
+Then I verify the cluster status:
+
+```bash id="5xtwns"
 kubectl get nodes
 ```
 
-#### 2. Containerize Services
-Building the Docker images for the indexer and API services:
-```bash
-# Build Indexer
-docker build -t my-indexer ./apps/indexer
+---
 
-# Build API
+## 2. Build the Application Containers
+
+I build the Docker images for the indexer and API services.
+
+### Build Indexer
+
+```bash id="v76udw"
+docker build -t my-indexer ./apps/indexer
+```
+
+### Build API
+
+```bash id="cbj9y6"
 docker build -t my-api ./apps/api
 ```
 
-#### 3. Deploy to Kubernetes
-Loading the images into the kind cluster and apply the Kubernetes manifests:
-```bash
-# Load images into kind
+---
+
+## 3. Load Images into the kind Cluster
+
+I load the local Docker images into the Kubernetes cluster:
+
+```bash id="3eq36g"
 kind load docker-image my-indexer --name local-blockchain
 kind load docker-image my-api --name local-blockchain
+```
 
-# Deploy services
+---
+
+## 4. Deploy the Infrastructure
+
+I deploy the Kubernetes manifests using:
+
+```bash id="gdn5g9"
 kubectl apply -f infra/k8s/base/
 ```
 
-#### 4. Verification
-Checking the status of deployments in Kubernetes:
-```bash
+---
+
+## 5. Verify Deployments
+
+I check the running pods with:
+
+```bash id="4xj1iu"
 kubectl get pods
 ```
-We should see both `indexer-deployment` and `api-deployment` in `Running` status
-I also monitoring my cluster with **Lens** 
 
-***
+Expected running services:
 
+* `indexer-deployment`
+* `api-deployment`
+* PostgreSQL deployment
 
-## Current Progress
+---
 
-Today I added PostgreSQL to the Kubernetes cluster by creating a PersistentVolumeClaim, a Deployment, and a Service for the database. During verification, the PostgreSQL pod initially stayed in `Pending` because Kubernetes could not pull the image from Docker Hub due to network instability and an `ImagePullBackOff` error.
+# Monitoring
 
-To avoid repeated external downloads, I switched to a local-first workflow. I built the API and indexer images locally and successfully loaded them into the `kind` cluster. This confirmed that the local Docker setup and the `kind` cluster are working correctly, and it reduced the need for internet access during deployment.
+I monitor the Kubernetes cluster locally using Lens.
 
-At this point, the infrastructure includes:
-- A running local Kubernetes cluster.
-- Locally built API and indexer images loaded into `kind`.
-- A PostgreSQL configuration added to the cluster manifests.
+---
 
-The next step is to finalize the Kubernetes manifests for the application services so they run entirely from local images without pulling from the network.
+# Database Layer
+
+I configured a PostgreSQL database for storing indexed blockchain transfer events.
+
+## Current Table
+
+### `token_transfers`
+
+Columns:
+
+* `tx_hash`
+* `block_number`
+* `event_index`
+* `from_address`
+* `to_address`
+* `token_address`
+* `amount`
+* `status`
+* `processed_at`
+* `created_at`
+
+---
+
+# Schema Setup
+
+I stored the initial database schema in:
+
+```text id="y8d98m"
+infra/db/schema.sql
+```
+
+The schema creates:
+
+* the `token_transfers` table,
+* indexes on:
+
+  * block number,
+  * token address,
+  * sender address,
+  * receiver address.
+
+---
+
+# Infrastructure Progress
+
+## Completed
+
+So far, I have:
+
+* Defined the project scope and architecture.
+* Designed the PostgreSQL database schema.
+* Installed and configured PostgreSQL locally.
+* Created the `token_transfers` table.
+* Executed the schema successfully.
+* Verified database connectivity.
+* Inserted and validated test records.
+* Added PostgreSQL to the Kubernetes cluster.
+* Created:
+
+  * a PersistentVolumeClaim,
+  * a PostgreSQL Deployment,
+  * a PostgreSQL Service.
+* Built the API and indexer Docker images locally.
+* Loaded local images into the `kind` cluster successfully.
+* Verified local Docker and Kubernetes integration.
+
+---
+
+# Issues Encountered
+
+During deployment verification, the PostgreSQL pod initially remained in `Pending` state due to an `ImagePullBackOff` error caused by Docker Hub connectivity issues and network instability.
+
+To avoid repeated external downloads, I switched to a local-first workflow by using locally built Docker images and loading them directly into the `kind` cluster.
+
+This approach:
+
+* reduces internet dependency,
+* speeds up deployments,
+* improves local development reliability.
+
+---
+
+# Current Infrastructure Status
+
+At this stage, my infrastructure includes:
+
+* A running local Kubernetes cluster.
+* PostgreSQL configured inside Kubernetes.
+* Local API and indexer images loaded into `kind`.
+* Kubernetes manifests for infrastructure deployment.
+* A functional PostgreSQL schema for blockchain event storage.
+
+---
+
+## Repository Structure
+
+```text
+.
+├── README.md
+├── infra/
+│   ├── db/
+│   │   └── schema.sql
+│   └── k8s/
+│       └── base/
+│           ├── namespace.yaml
+│           ├── postgres-configmap.yaml
+│           ├── postgres-secret.yaml
+│           ├── postgres-pv.yaml
+│           ├── postgres-pvc.yaml
+│           ├── postgres-deployment.yaml
+│           ├── postgres-service.yaml
+│           ├── api-deployment.yaml
+│           ├── api-service.yaml
+│           ├── indexer-deployment.yaml
+│           ├── indexer-service.yaml
+│           ├── ingress.yaml
+│           └── kustomization.yaml
+├── app/
+│   ├── api/
+│   │   ├── main.py
+│   │   ├── database.py
+│   │   └── schemas.py
+│   └── indexer/
+│       ├── main.py
+│       ├── processor.py
+│       └── blockchain_client.py
+├── scripts/
+│   ├── init_db.sql
+│   └── seed_test_data.sql
+└── docs/
+    ├── architecture.md
+    └── deployment.md
+```
+
+# Next Steps
+
+The next phase of development includes:
+
+* Connecting the backend API service to PostgreSQL.
+* Creating the first API endpoint for indexed transfers.
+* Finalizing Kubernetes manifests for fully local deployments.
+* Running all services entirely from local Docker images.
+* Expanding the blockchain event indexing functionality.
