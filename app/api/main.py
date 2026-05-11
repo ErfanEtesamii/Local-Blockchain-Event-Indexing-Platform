@@ -1,11 +1,32 @@
-from flask import Flask
+from fastapi import FastAPI
+from app.api.database import get_connection
+from decimal import Decimal
 
-app = Flask(__name__)
+app = FastAPI(title="Blockchain Indexer API")
 
-@app.route("/")
-def index():
-    return {"status": "API is running", "message": "Blockchain data is accessible"}
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
-if __name__ == "__main__":
-    # روی همه آی‌پی‌ها و پورت 8080 اجرا می‌شود
-    app.run(host="0.0.0.0", port=8080)
+@app.get("/transfers")
+def list_transfers():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                SELECT
+                    id,
+                    tx_hash,
+                    block_number,
+                    event_index,
+                    from_address,
+                    to_address,
+                    token_address,
+                    amount::text AS amount,
+                    status,
+                    processed_at,
+                    created_at
+                FROM token_transfers
+                ORDER BY id DESC
+            """)
+            rows = cur.fetchall()
+    return {"data": rows}
