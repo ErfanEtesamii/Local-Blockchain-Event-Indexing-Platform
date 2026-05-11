@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
+from decimal import Decimal
 from typing import Optional
 
 class TokenTransfer(BaseModel):
@@ -10,7 +11,7 @@ class TokenTransfer(BaseModel):
     from_address: str
     to_address: str
     token_address: str
-    amount: str
+    amount: Decimal
     status: str
     processed_at: datetime
     created_at: datetime
