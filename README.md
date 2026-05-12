@@ -198,8 +198,11 @@ So far, I have:
 - Built a FastAPI backend and connected it to PostgreSQL.
 - Created a working `/health` endpoint.
 - Created a working `/transfers` endpoint.
+- Added pagination to `/transfers`.
 - Fixed PostgreSQL authentication issues for `indexer_user`.
 - Confirmed the API can read data from PostgreSQL successfully.
+- Started the indexer pipeline and validated that it can write new transfer data into `token_transfers`.
+- Confirmed the end-to-end flow from source to processor to database to API.
 
 ---
 
@@ -227,6 +230,7 @@ At this stage, my infrastructure includes:
 - Kubernetes manifests for infrastructure deployment.
 - A functional PostgreSQL schema for blockchain event storage.
 - A working FastAPI backend connected to PostgreSQL.
+- A working initial indexing pipeline that can write blockchain transfer records into the database.
 
 ---
 
@@ -240,6 +244,7 @@ Today, I focused on the backend API foundation and validated end-to-end communic
 - I created the initial FastAPI application.
 - I added PostgreSQL database connection logic.
 - I created the `token_transfers` endpoint.
+- I added pagination to the `/transfers` endpoint.
 - I fixed PostgreSQL authentication issues for `indexer_user`.
 - I confirmed that the schema was applied successfully.
 - I inserted a test blockchain transfer record into the database.
@@ -248,10 +253,12 @@ Today, I focused on the backend API foundation and validated end-to-end communic
 - I tested the `/health` endpoint successfully.
 - I tested the `/transfers` endpoint successfully through Swagger UI.
 - I reached a working `200 OK` response from the API after fixing database credentials.
+- I started the indexer flow and verified that a new transfer record was written into `token_transfers`.
+- I confirmed the full source → processor → database → API flow.
 
 ### Result
 
-My local API is now connected to PostgreSQL and can read indexed blockchain transfer data successfully.
+My local API is now connected to PostgreSQL and can read indexed blockchain transfer data successfully, and my initial indexer flow can write new records into the database.
 
 ---
 
@@ -312,3 +319,4 @@ The next phase of development includes:
 - Running all services entirely from local Docker images.
 - Expanding the blockchain event indexing functionality.
 - Adding more API endpoints for querying indexed blockchain data.
+- Improving the indexer with logging, retries, and duplicate handling.
