@@ -1,11 +1,12 @@
-# استفاده از نسخه سبک پایتون
-FROM python:3.11-slim
+FROM python:3.14-slim
 
-# تعیین مسیر کاری داخل کانتینر
 WORKDIR /app
 
-# کپی کردن فایل برنامه به داخل کانتینر
-COPY main.py .
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# دستور اجرای برنامه
-CMD ["python", "main.py"]
+COPY app /app/app
+
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python", "-m", "app.indexer.main"]
