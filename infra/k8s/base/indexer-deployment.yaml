@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: indexer-deployment
+  name: indexer
 spec:
   replicas: 1
   selector:
@@ -12,7 +12,20 @@ spec:
       labels:
         app: indexer
     spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done
       containers:
-      - name: indexer
-        image: my-indexer:latest  
-        imagePullPolicy: Never   
+        - name: indexer
+          image: my-indexer
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: database_url
