@@ -1,10 +1,27 @@
-from fastapi import FastAPI
-from app.api.transfers import router as transfers_router
+import os
 
-app = FastAPI(title="Blockchain Indexer API")
+from fastapi import FastAPI, HTTPException
+from psycopg2 import connect
+from psycopg2.errors import OperationalError
 
-@app.get("/health")
-def health():
+app = FastAPI()
+
+
+@app.get("/livez")
+def livez():
     return {"status": "ok"}
 
-app.include_router(transfers_router)
+
+@app.get("/readyz")
+def readyz():
+    database_url = os.getenv("DATABASE_URL")
+    if not database_url:
+        raise HTTPException(status_code=503, detail="DATABASE_URL is not set")
+
+    try:
+        conn = connect(database_url)
+        conn.close()
+    except OperationalError:
+        raise HTTPException(status_code=503, detail="database is not ready")
+
+    return {"status": "ready"}
