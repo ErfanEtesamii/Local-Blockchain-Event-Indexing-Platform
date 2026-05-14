@@ -25,9 +25,7 @@ I use Docker to build and run the application containers.
 
 I installed Docker Desktop from:
 
-```text
-https://www.docker.com/products/docker-desktop/
-```
+[https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)
 
 ### kubectl
 
@@ -45,9 +43,7 @@ I use `kind` to run a local Kubernetes cluster inside Docker.
 
 I downloaded the binary from:
 
-```text
-https://kind.sigs.k8s.io/docs/user/quick-start/
-```
+[https://kind.sigs.k8s.io/docs/user/quick-start/](https://kind.sigs.k8s.io/docs/user/quick-start/)
 
 ### PostgreSQL
 
@@ -115,7 +111,7 @@ kind load docker-image my-api --name local-blockchain
 I deploy the Kubernetes manifests using:
 
 ```bash
-kubectl apply -f infra/k8s/base/
+kubectl apply -k infra/k8s/base/
 ```
 
 ### Verify Deployments
@@ -128,9 +124,9 @@ kubectl get pods
 
 I expect these core services to run:
 
-- `indexer-deployment`
-- `api-deployment`
-- PostgreSQL deployment
+- `indexer`
+- `api`
+- `postgres`
 
 ---
 
@@ -191,16 +187,16 @@ So far, I have:
 - Created:
   - a PersistentVolumeClaim,
   - a PostgreSQL Deployment,
-  - a PostgreSQL Service.
+  - a PostgreSQL Service,
+  - a PostgreSQL Secret,
+  - and Kubernetes manifests organized with `kustomization.yaml`.
 - Built the API and indexer Docker images locally.
 - Loaded local images into the `kind` cluster successfully.
 - Verified local Docker and Kubernetes integration.
 - Built a FastAPI backend and connected it to PostgreSQL.
 - Created a working `/health` endpoint.
-- Created a working `/transfers` endpoint.
-- Added pagination to `/transfers`.
-- Fixed PostgreSQL authentication issues for `indexer_user`.
-- Confirmed the API can read data from PostgreSQL successfully.
+- Added Kubernetes health endpoints for service readiness and liveness.
+- Separated PostgreSQL configuration into dedicated manifest files.
 - Added logging to the indexer flow.
 - Built and ran the indexer inside Docker.
 - Fixed the `DATABASE_URL` issue by passing the environment variable at runtime.
@@ -237,6 +233,8 @@ At this stage, my infrastructure includes:
 - A working FastAPI backend connected to PostgreSQL.
 - A working initial indexing pipeline that can write blockchain transfer records into the database.
 - A Dockerized indexer that can run locally with runtime environment configuration.
+- Health-aware Kubernetes manifests for the API and PostgreSQL.
+- Separate Kubernetes files for `Secret`, `Service`, and workload resources.
 
 ---
 
@@ -256,6 +254,9 @@ Today, I focused on making the indexer pipeline runnable inside Docker and valid
 - I confirmed that a new row was written into `token_transfers`.
 - I re-checked the table contents from PostgreSQL.
 - I confirmed that the full source → processor → database flow works inside Docker.
+- I reorganized the Kubernetes manifests into separate files for PostgreSQL deployment, service, and secret.
+- I updated the Kubernetes structure to be more local-first and easier to maintain.
+- I prepared the cluster manifests for readiness/liveness handling.
 
 ### Result
 
@@ -321,3 +322,4 @@ The next phase of development includes:
 - Adding more API endpoints for querying indexed blockchain data.
 - Improving the indexer with retries and duplicate handling.
 - Moving the indexer runtime configuration into a cleaner `.env`-based setup.
+- Verifying health probes and readiness behavior in the local cluster.
