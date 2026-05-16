@@ -1,15 +1,21 @@
 import logging
+
+from app.api.database import get_connection
 from app.indexer.blockchain_client import fetch_events
 from app.indexer.processor import normalize_transfer
-from app.api.database import get_connection
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s - %(message)s",
+)
 logger = logging.getLogger(__name__)
+
 
 def save_transfer(transfer):
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO token_transfers (
                     tx_hash,
                     block_number,
@@ -30,11 +36,15 @@ def save_transfer(transfer):
                     %(status)s
                 )
                 ON CONFLICT (tx_hash) DO NOTHING
-            """, transfer)
-            conn.commit()
+                """,
+                transfer,
+            )
+        conn.commit()
+
 
 def main():
     logger.info("Indexer started")
+
     events = fetch_events()
     logger.info("Fetched %s events", len(events))
 
@@ -46,6 +56,7 @@ def main():
         logger.info("Processed transfer %s", transfer["tx_hash"])
 
     logger.info("Indexer finished. processed=%s", processed)
+
 
 if __name__ == "__main__":
     main()
