@@ -1,17 +1,11 @@
-# استفاده از نسخه سبک پایتون
 FROM python:3.11-slim
 
-# تعیین مسیر کاری داخل کانتینر
 WORKDIR /app
 
-# نصب کتابخانه flask
-RUN pip install flask
+RUN pip install --no-cache-dir fastapi uvicorn psycopg2-binary
 
-# کپی کردن فایل برنامه به داخل کانتینر
-COPY main.py .
+COPY app/api/main.py /app/main.py
 
-# باز کردن پورت 8080 برای دسترسی خارجی
 EXPOSE 8080
 
-# دستور اجرای برنامه
-CMD ["python", "main.py"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]
