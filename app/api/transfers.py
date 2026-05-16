@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Query
+
 from app.api.database import get_connection
 
 router = APIRouter(prefix="/transfers", tags=["Transfers"])
+
 
 @router.get("")
 def list_transfers(
@@ -15,7 +17,8 @@ def list_transfers(
             cur.execute("SELECT COUNT(*) AS total FROM token_transfers")
             total = cur.fetchone()["total"]
 
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT
                     id,
                     tx_hash,
@@ -31,7 +34,9 @@ def list_transfers(
                 FROM token_transfers
                 ORDER BY id DESC
                 LIMIT %s OFFSET %s
-            """, (limit, offset))
+                """,
+                (limit, offset),
+            )
             rows = cur.fetchall()
 
     return {
@@ -40,6 +45,6 @@ def list_transfers(
             "page": page,
             "limit": limit,
             "total": total,
-            "pages": (total + limit - 1) // limit if total else 0
-        }
+            "pages": (total + limit - 1) // limit if total else 0,
+        },
     }
