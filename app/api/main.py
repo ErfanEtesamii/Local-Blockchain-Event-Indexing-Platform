@@ -1,10 +1,11 @@
-import os
-
 from fastapi import FastAPI, HTTPException
-from psycopg2 import connect
-from psycopg2.errors import OperationalError
+
+from app.api.database import get_connection
+from app.api.transfers import router as transfers_router
 
 app = FastAPI()
+
+app.include_router(transfers_router)
 
 
 @app.get("/livez")
@@ -14,14 +15,12 @@ def livez():
 
 @app.get("/readyz")
 def readyz():
-    database_url = os.getenv("DATABASE_URL")
-    if not database_url:
-        raise HTTPException(status_code=503, detail="DATABASE_URL is not set")
-
     try:
-        conn = connect(database_url)
-        conn.close()
-    except OperationalError:
-        raise HTTPException(status_code=503, detail="database is not ready")
+        with get_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
+                cur.fetchone()
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"database is not ready: {exc}")
 
     return {"status": "ready"}
