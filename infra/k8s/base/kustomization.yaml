@@ -8,4 +8,3 @@ resources:
   - api-deployment.yaml
   - api-service.yaml
   - indexer-deployment.yaml
-  - indexer-service.yaml
