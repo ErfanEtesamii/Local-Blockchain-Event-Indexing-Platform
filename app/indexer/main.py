@@ -2,7 +2,10 @@ import logging
 
 from app.api.database import get_connection
 from app.indexer.blockchain_client import fetch_events
-from app.indexer.processor import normalize_transfer
+from app.indexer.processor import (
+    InvalidTransferEvent,
+    normalize_transfer,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -49,11 +52,20 @@ def main():
     logger.info("Fetched %s events", len(events))
 
     processed = 0
+
     for event in events:
-        transfer = normalize_transfer(event)
-        save_transfer(transfer)
-        processed += 1
-        logger.info("Processed transfer %s", transfer["tx_hash"])
+        try:
+            transfer = normalize_transfer(event)
+            save_transfer(transfer)
+
+            processed += 1
+            logger.info("Processed transfer %s", transfer["tx_hash"])
+
+        except InvalidTransferEvent as exc:
+            logger.warning("Skipping invalid event: %s", exc)
+
+        except Exception:
+            logger.exception("Unexpected error while processing event")
 
     logger.info("Indexer finished. processed=%s", processed)
 
