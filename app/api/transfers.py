@@ -10,15 +10,34 @@ def list_transfers(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     from_address: str | None = Query(default=None),
+    to_address: str | None = Query(default=None),
+    token_address: str | None = Query(default=None),
+    status: str | None = Query(default=None),
 ):
     offset = (page - 1) * limit
 
-    where_clause = ""
+    conditions = []
     params = []
 
     if from_address:
-        where_clause = "WHERE from_address = %s"
+        conditions.append("from_address = %s")
         params.append(from_address)
+
+    if to_address:
+        conditions.append("to_address = %s")
+        params.append(to_address)
+
+    if token_address:
+        conditions.append("token_address = %s")
+        params.append(token_address)
+
+    if status:
+        conditions.append("status = %s")
+        params.append(status)
+
+    where_clause = ""
+    if conditions:
+        where_clause = "WHERE " + " AND ".join(conditions)
 
     with get_connection() as conn:
         with conn.cursor() as cur:
