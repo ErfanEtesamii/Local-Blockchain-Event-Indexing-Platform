@@ -52,6 +52,8 @@ def main():
     logger.info("Fetched %s events", len(events))
 
     processed = 0
+    invalid = 0
+    failed = 0
 
     for event in events:
         try:
@@ -62,12 +64,17 @@ def main():
             logger.info("Processed transfer %s", transfer["tx_hash"])
 
         except InvalidTransferEvent as exc:
+            invalid += 1
             logger.warning("Skipping invalid event: %s", exc)
 
         except Exception:
+            failed += 1
             logger.exception("Unexpected error while processing event")
 
-    logger.info("Indexer finished. processed=%s", processed)
+    logger.info("Indexer finished")
+    logger.info("Processed events : %s", processed)
+    logger.info("Invalid events  : %s", invalid)
+    logger.info("Failed events   : %s", failed)
 
 
 if __name__ == "__main__":
