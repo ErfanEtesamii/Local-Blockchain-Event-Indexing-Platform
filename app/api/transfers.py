@@ -1,8 +1,15 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 
 from app.api.database import get_connection
 
 router = APIRouter(prefix="/transfers", tags=["Transfers"])
+
+ALLOWED_SORT_FIELDS = {
+    "id": "id",
+    "block": "block_number",
+    "amount": "amount",
+    "created": "created_at",
+}
 
 
 @router.get("")
@@ -13,6 +20,8 @@ def list_transfers(
     to_address: str | None = Query(default=None),
     token_address: str | None = Query(default=None),
     status: str | None = Query(default=None),
+    sort: str = Query(default="id"),
+    order: str = Query(default="desc"),
 ):
     offset = (page - 1) * limit
 
@@ -36,8 +45,25 @@ def list_transfers(
         params.append(status)
 
     where_clause = ""
+
     if conditions:
         where_clause = "WHERE " + " AND ".join(conditions)
+
+    sort_column = ALLOWED_SORT_FIELDS.get(sort)
+
+    if sort_column is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid sort field. Allowed values: id, block, amount, created.",
+        )
+
+    order = order.lower()
+
+    if order not in ("asc", "desc"):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid order. Allowed values: asc, desc.",
+        )
 
     with get_connection() as conn:
         with conn.cursor() as cur:
@@ -66,7 +92,7 @@ def list_transfers(
                     created_at
                 FROM token_transfers
                 {where_clause}
-                ORDER BY id DESC
+                ORDER BY {sort_column} {order.upper()}
                 LIMIT %s OFFSET %s
             """
 
