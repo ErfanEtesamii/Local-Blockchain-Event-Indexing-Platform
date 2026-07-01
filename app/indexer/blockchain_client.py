@@ -11,6 +11,14 @@ logger = logging.getLogger(__name__)
 
 RPC_URL = os.getenv("RPC_URL")
 
+# how many transactions to process per run - blocks can have hundreds
+# of them, and we want to keep each run quick for now
+TX_LIMIT = int(os.getenv("INDEXER_TX_LIMIT", "20"))
+
+# used as the token_address for native ETH transfers, since these
+# aren't ERC-20 token transfers and don't have a contract address
+NATIVE_TOKEN_ADDRESS = "0x0000000000000000000000000000000000000000"
+
 
 class BlockchainConnectionError(Exception):
     """Raised when the blockchain data source can't be reached."""
@@ -42,17 +50,38 @@ def get_latest_block():
 
 def _fetch_raw_events():
     """
-    Temporary implementation.
-
-    Confirms the RPC connection is alive and logs the latest block
-    number. Real event retrieval (pulling transfer logs from specific
-    blocks) will be implemented in the next task.
+    Read the transactions from the latest block and turn them into
+    our internal event format.
     """
-    latest_block = get_latest_block()
+    web3 = get_web3()
+    block = web3.eth.get_block("latest", full_transactions=True)
 
-    logger.info("Connected to Ethereum. Latest block: %s", latest_block)
+    logger.info(
+        "Reading block %s, %s transactions found",
+        block["number"],
+        len(block["transactions"]),
+    )
 
-    return []
+    events = []
+
+    for tx in block["transactions"][:TX_LIMIT]:
+        if tx["to"] is None:
+            # contract creation transactions have no "to" address, skip them
+            continue
+
+        events.append(
+            {
+                "tx_hash": tx["hash"].hex(),
+                "block_number": tx["blockNumber"],
+                "event_index": tx["transactionIndex"],
+                "from_address": tx["from"],
+                "to_address": tx["to"],
+                "token_address": NATIVE_TOKEN_ADDRESS,
+                "amount": str(tx["value"]),
+            }
+        )
+
+    return events
 
 
 def fetch_events(max_retries=3, backoff_seconds=2):
