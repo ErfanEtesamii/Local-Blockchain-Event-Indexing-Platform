@@ -1,7 +1,10 @@
 import logging
 
 from app.api.database import get_connection
-from app.indexer.blockchain_client import fetch_events
+from app.indexer.blockchain_client import (
+    BlockchainConnectionError,
+    fetch_events,
+)
 from app.indexer.processor import (
     InvalidTransferEvent,
     normalize_transfer,
@@ -48,7 +51,12 @@ def save_transfer(transfer):
 def main():
     logger.info("Indexer started")
 
-    events = fetch_events()
+    try:
+        events = fetch_events()
+    except BlockchainConnectionError:
+        logger.exception("Could not fetch events from blockchain source, aborting run")
+        return
+
     logger.info("Fetched %s events", len(events))
 
     processed = 0
