@@ -1,41 +1,66 @@
 import logging
+import os
 import time
 
+from dotenv import load_dotenv
+from web3 import Web3
+
+load_dotenv()
+
 logger = logging.getLogger(__name__)
+
+RPC_URL = os.getenv("RPC_URL")
 
 
 class BlockchainConnectionError(Exception):
     """Raised when the blockchain data source can't be reached."""
 
 
+def get_web3():
+    """
+    Create and validate a Web3 client.
+    """
+    if not RPC_URL:
+        raise RuntimeError("RPC_URL is not configured")
+
+    web3 = Web3(Web3.HTTPProvider(RPC_URL))
+
+    if not web3.is_connected():
+        raise RuntimeError("Unable to connect to Ethereum RPC")
+
+    return web3
+
+
+def get_latest_block():
+    """
+    Return the latest block number.
+    """
+    web3 = get_web3()
+
+    return web3.eth.block_number
+
+
 def _fetch_raw_events():
     """
-    Placeholder for the real blockchain data source call.
+    Temporary implementation.
 
-    Right now this just returns a fixed mock event so the rest of the
-    pipeline (processor -> database -> API) can be built and tested
-    locally before wiring up a real chain/provider connection.
+    Confirms the RPC connection is alive and logs the latest block
+    number. Real event retrieval (pulling transfer logs from specific
+    blocks) will be implemented in the next task.
     """
-    return [
-        {
-            "tx_hash": "0xindexerhash001",
-            "block_number": 123457,
-            "event_index": 0,
-            "from_address": "0xaaa111",
-            "to_address": "0xbbb222",
-            "token_address": "0xtoken123",
-            "amount": "250.5",
-        }
-    ]
+    latest_block = get_latest_block()
+
+    logger.info("Connected to Ethereum. Latest block: %s", latest_block)
+
+    return []
 
 
 def fetch_events(max_retries=3, backoff_seconds=2):
     """
     Fetch blockchain events with basic retry handling.
 
-    The mock source below doesn't actually fail on its own, but the
-    retry wrapper is here so that swapping _fetch_raw_events() for a
-    real RPC/provider call later won't require touching main.py.
+    Wraps the RPC connection/fetch step so a transient network issue
+    (timeout, RPC provider hiccup) doesn't crash the whole indexer run.
     """
     attempt = 0
 
